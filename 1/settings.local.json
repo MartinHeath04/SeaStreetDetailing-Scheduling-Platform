@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/martinheath/sea-street-detailing/**)",
+      "Read(//Users/martinheath/**)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run build:*)",
+      "Bash(PORT=3003 npm run dev)",
+      "Bash(node:*)",
+      "Bash(npm --version)",
+      "Bash(sudo lsof:*)",
+      "Bash(PORT=3006 npm run dev)",
+      "Bash(npx next@14.2.5 dev -p 3008)",
+      "Bash(npm ls:*)",
+      "Bash(sudo pkill:*)",
+      "Bash(killall:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)",
+      "Read(//var/folders/j5/ngztm8g11pnfdwf6dzwc0l0c0000gn/T/TemporaryItems/NSIRD_screencaptureui_UskCLB/**)",
+      "Read(//var/folders/j5/ngztm8g11pnfdwf6dzwc0l0c0000gn/T/TemporaryItems/NSIRD_screencaptureui_AemOMZ/**)",
+      "Bash(bash)",
+      "Bash(export NVM_DIR=\"$HOME/.nvm\")",
+      "Bash([ -s \"$NVM_DIR/nvm.sh\" ])",
+      "Bash(. \"$NVM_DIR/nvm.sh\")",
+      "Bash(nvm install 22)",
+      "Bash(git reset --hard HEAD~1)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

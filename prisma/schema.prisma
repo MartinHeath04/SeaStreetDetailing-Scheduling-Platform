@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id             String  @id @default(cuid())
+  name           String
+  durationMin    Int     @map("duration_min")
+  basePriceCents Int     @map("base_price_cents")
+  active         Boolean @default(true)
+
+  bookings Booking[]
+
+  @@map("service")
+}
+
+model AddOn {
+  id          String  @id @default(cuid())
+  name        String
+  priceCents  Int     @default(0) @map("price_cents")
+  durationMin Int     @default(0) @map("duration_min")
+  active      Boolean @default(true)
+
+  @@map("addon")
+}
+
+model Booking {
+  id                    String        @id @default(cuid())
+  customerName          String        @map("customer_name")
+  email                 String
+  phone                 String
+  serviceId             String        @map("service_id")
+  addOnIds              String        @default("[]") @map("add_on_ids") // JSON string array
+  startAtUtc            DateTime      @map("start_at_utc")
+  endAtUtc              DateTime      @map("end_at_utc")
+  address               String
+  notes                 String?
+  status                BookingStatus
+  priceCents            Int           @map("price_cents")
+  stripePaymentIntentId String?       @map("stripe_payment_intent_id")
+  gcalEventId           String?       @map("gcal_event_id")
+  createdAt             DateTime      @default(now()) @map("created_at")
+
+  service  Service   @relation(fields: [serviceId], references: [id])
+  payments Payment[]
+  smsLogs  SmsLog[]
+
+  @@map("booking")
+}
+
+model Unavailability {
+  id         String   @id @default(cuid())
+  startAtUtc DateTime @map("start_at_utc")
+  endAtUtc   DateTime @map("end_at_utc")
+  reason     String?
+
+  @@map("unavailability")
+}
+
+model SmsLog {
+  id        String       @id @default(cuid())
+  bookingId String?      @map("booking_id")
+  direction SmsDirection
+  toNumber  String       @map("to_number")
+  body      String
+  status    String?
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@map("sms_log")
+}
+
+model Payment {
+  id          String    @id @default(cuid())
+  bookingId   String    @map("booking_id")
+  amountCents Int       @map("amount_cents")
+  status      String
+  providerRef String?   @map("provider_ref")
+  paidAt      DateTime? @map("paid_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payment")
+}
+
+enum BookingStatus {
+  pending
+  pending_payment
+  confirmed
+  cancelled
+  payment_failed
+}
+
+enum SmsDirection {
+  inbound
+  outbound
+}
