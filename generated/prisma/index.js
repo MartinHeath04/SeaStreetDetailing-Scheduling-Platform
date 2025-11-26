@@ -192,7 +192,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/martinheath/sea-street-detailing-clean/generated/prisma",
+      "value": "/Users/martinheath/SeaStreetDetailing-Scheduling-Platform/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -206,7 +206,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/martinheath/sea-street-detailing-clean/prisma/schema.prisma",
+    "sourceFilePath": "/Users/martinheath/SeaStreetDetailing-Scheduling-Platform/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
