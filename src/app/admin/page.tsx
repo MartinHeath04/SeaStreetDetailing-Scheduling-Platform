@@ -34,6 +34,45 @@ export default function AdminPage() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const [stats, setStats] = useState({
+    todayCount: 0,
+    totalCount: 0,
+    totalRevenue: 0,
+  })
+
+  // Fetch dashboard stats
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/bookings')
+      if (response.ok) {
+        const data = await response.json()
+        const allBookings = data.bookings
+
+        // Calculate stats
+        const today = new Date().toDateString()
+        const todayBookings = allBookings.filter((b: Booking) =>
+          new Date(b.appointment.startAt).toDateString() === today &&
+          b.status !== 'cancelled'
+        )
+
+        const revenue = allBookings
+          .filter((b: Booking) => b.status === 'confirmed')
+          .reduce((sum: number, b: Booking) => sum + b.price.cents, 0)
+
+        setStats({
+          todayCount: todayBookings.length,
+          totalCount: allBookings.length,
+          totalRevenue: revenue / 100,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err)
+    }
+  }
 
   const openBookingDetail = (booking: Booking) => {
     setSelectedBooking(booking)
@@ -199,8 +238,10 @@ export default function AdminPage() {
                   <h3 className="text-sm font-medium text-gray-600">Today's Appointments</h3>
                   <span className="text-2xl">📅</span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">0</p>
-                <p className="text-sm text-gray-500 mt-1">No appointments today</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.todayCount}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {stats.todayCount === 0 ? 'No appointments today' : 'Scheduled for today'}
+                </p>
               </div>
 
               {/* Total Bookings */}
@@ -209,7 +250,7 @@ export default function AdminPage() {
                   <h3 className="text-sm font-medium text-gray-600">Total Bookings</h3>
                   <span className="text-2xl">📊</span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">-</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.totalCount}</p>
                 <p className="text-sm text-gray-500 mt-1">All time</p>
               </div>
 
@@ -219,7 +260,7 @@ export default function AdminPage() {
                   <h3 className="text-sm font-medium text-gray-600">Total Revenue</h3>
                   <span className="text-2xl">💰</span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">$0</p>
+                <p className="text-3xl font-bold text-gray-900">${stats.totalRevenue.toFixed(2)}</p>
                 <p className="text-sm text-gray-500 mt-1">Confirmed bookings</p>
               </div>
             </div>
