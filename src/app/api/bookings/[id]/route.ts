@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBookingById } from '@/lib/booking'
+import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/bookings/[id] - Get booking by ID
@@ -95,6 +96,72 @@ export async function GET(
 
     return NextResponse.json(
       { error: 'Failed to fetch booking' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * PATCH /api/bookings/[id] - Update booking status
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json()
+    const { status } = body
+
+    if (!status) {
+      return NextResponse.json(
+        { error: 'Status is required' },
+        { status: 400 }
+      )
+    }
+
+    // Valid status values
+    const validStatuses = ['pending', 'pending_payment', 'confirmed', 'cancelled', 'payment_failed']
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status value' },
+        { status: 400 }
+      )
+    }
+
+    // Check if booking exists
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: params.id },
+    })
+
+    if (!existingBooking) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      )
+    }
+
+    // Update booking status
+    const updatedBooking = await prisma.booking.update({
+      where: { id: params.id },
+      data: { status },
+      include: {
+        service: true,
+      },
+    })
+
+    return NextResponse.json({
+      success: true,
+      booking: {
+        id: updatedBooking.id,
+        status: updatedBooking.status,
+        customerName: updatedBooking.customerName,
+        service: updatedBooking.service.name,
+      },
+    })
+  } catch (error) {
+    console.error('Error updating booking:', error)
+    return NextResponse.json(
+      { error: 'Failed to update booking' },
       { status: 500 }
     )
   }
