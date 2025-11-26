@@ -32,15 +32,57 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
 
   const openBookingDetail = (booking: Booking) => {
     setSelectedBooking(booking)
     setShowDetailModal(true)
+    setCancelError(null)
   }
 
   const closeDetailModal = () => {
     setShowDetailModal(false)
     setSelectedBooking(null)
+    setCancelError(null)
+  }
+
+  const handleCancelBooking = async () => {
+    if (!selectedBooking || !confirm('Are you sure you want to cancel this booking?')) {
+      return
+    }
+
+    try {
+      setCancelling(true)
+      setCancelError(null)
+
+      const response = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'cancelled' }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to cancel booking')
+      }
+
+      // Update local state
+      setBookings(bookings.map(b =>
+        b.id === selectedBooking.id ? { ...b, status: 'cancelled' } : b
+      ))
+
+      // Update selected booking
+      setSelectedBooking({ ...selectedBooking, status: 'cancelled' })
+
+      alert('Booking cancelled successfully')
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Failed to cancel booking')
+    } finally {
+      setCancelling(false)
+    }
   }
 
   // Fetch bookings when bookings tab is active
@@ -372,20 +414,29 @@ export default function AdminPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
-              {selectedBooking.status !== 'cancelled' && (
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
-                >
-                  Cancel Booking
-                </button>
+            <div className="border-t border-gray-200 px-6 py-4">
+              {cancelError && (
+                <div className="mb-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-800 text-sm">{cancelError}</p>
+                </div>
               )}
-              <button
-                onClick={closeDetailModal}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium"
-              >
-                Close
-              </button>
+              <div className="flex justify-end space-x-3">
+                {selectedBooking.status !== 'cancelled' && (
+                  <button
+                    onClick={handleCancelBooking}
+                    disabled={cancelling}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+                  </button>
+                )}
+                <button
+                  onClick={closeDetailModal}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
