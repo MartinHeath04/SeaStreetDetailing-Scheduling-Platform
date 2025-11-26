@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createBooking, getBookingById } from '@/lib/booking'
+import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 // Validation schema for booking creation (matching test format)
@@ -23,6 +24,75 @@ const createBookingSchema = z.object({
   address: z.string().min(5, 'Address is required'),
   notes: z.string().optional(),
 })
+
+/**
+ * GET /api/bookings - Get all bookings
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+
+    // Build query filter
+    const where: any = {}
+    if (status && status !== 'all') {
+      where.status = status
+    }
+
+    // Fetch bookings with related data
+    const bookings = await prisma.booking.findMany({
+      where,
+      include: {
+        service: true,
+      },
+      orderBy: {
+        startAtUtc: 'desc',
+      },
+    })
+
+    // Format response
+    const formattedBookings = bookings.map((booking) => ({
+      id: booking.id,
+      customerName: booking.customerName,
+      email: booking.email,
+      phone: booking.phone,
+      service: {
+        name: booking.service.name,
+        duration: booking.service.durationMin,
+      },
+      appointment: {
+        startAt: booking.startAtUtc,
+        endAt: booking.endAtUtc,
+        formatted: new Date(booking.startAtUtc).toLocaleDateString('en-US', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+      },
+      address: booking.address,
+      status: booking.status,
+      price: {
+        cents: booking.priceCents,
+        formatted: `$${(booking.priceCents / 100).toFixed(2)}`,
+      },
+      createdAt: booking.createdAt,
+    }))
+
+    return NextResponse.json({
+      bookings: formattedBookings,
+      count: formattedBookings.length,
+    })
+  } catch (error) {
+    console.error('Error fetching bookings:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch bookings' },
+      { status: 500 }
+    )
+  }
+}
 
 /**
  * POST /api/bookings - Create a new booking
