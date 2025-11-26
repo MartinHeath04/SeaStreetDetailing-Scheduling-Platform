@@ -312,14 +312,23 @@ export default function BookPage() {
       setSubmitting(true)
       setSubmitError(null)
 
+      // Extract date and time from the selected time slot
+      const startDate = new Date(selectedTimeSlot.startUtc)
+      const dateStr = selectedDate // Already in YYYY-MM-DD format
+      const timeStr = selectedTimeSlot.start // Already in HH:MM format
+
       const bookingData = {
         serviceId: selectedService,
         addOnIds: selectedAddOns,
-        startAtUtc: selectedTimeSlot.startUtc,
-        endAtUtc: selectedTimeSlot.endUtc,
-        customerName: customerName.trim(),
-        email: customerEmail.trim(),
-        phone: customerPhone.trim(),
+        customer: {
+          name: customerName.trim(),
+          email: customerEmail.trim(),
+          phone: customerPhone.trim(),
+        },
+        appointment: {
+          date: dateStr,
+          startTime: timeStr,
+        },
         address: customerAddress.trim(),
         notes: customerNotes.trim() || undefined,
       }
@@ -338,10 +347,10 @@ export default function BookPage() {
       }
 
       const result = await response.json()
-      setBookingId(result.booking.id)
+      setBookingId(result.bookingId)
 
       // Redirect to success page or show confirmation
-      window.location.href = `/booking-confirmation?id=${result.booking.id}`
+      window.location.href = `/booking-confirmation?id=${result.bookingId}`
     } catch (error) {
       console.error('Error submitting booking:', error)
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit booking. Please try again.')
