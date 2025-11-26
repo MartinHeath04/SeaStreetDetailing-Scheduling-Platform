@@ -30,6 +30,18 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+
+  const openBookingDetail = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setShowDetailModal(true)
+  }
+
+  const closeDetailModal = () => {
+    setShowDetailModal(false)
+    setSelectedBooking(null)
+  }
 
   // Fetch bookings when bookings tab is active
   useEffect(() => {
@@ -255,7 +267,10 @@ export default function AdminPage() {
                           <div className="text-sm font-medium text-gray-900">{booking.price.formatted}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button className="text-blue-600 hover:text-blue-900 font-medium">
+                          <button
+                            onClick={() => openBookingDetail(booking)}
+                            className="text-blue-600 hover:text-blue-900 font-medium"
+                          >
                             View Details
                           </button>
                         </td>
@@ -268,6 +283,113 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Booking Detail Modal */}
+      {showDetailModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">Booking Details</h3>
+              <button
+                onClick={closeDetailModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-6 py-4 space-y-6">
+              {/* Customer Info */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Customer Information</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Name:</span>
+                    <span className="font-medium text-gray-900">{selectedBooking.customerName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium text-gray-900">{selectedBooking.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="font-medium text-gray-900">{selectedBooking.phone}</span>
+                  </div>
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-gray-600 mb-1">Address:</div>
+                    <div className="font-medium text-gray-900">{selectedBooking.address}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Info */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Service Details</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Service:</span>
+                    <span className="font-medium text-gray-900">{selectedBooking.service.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Duration:</span>
+                    <span className="font-medium text-gray-900">{selectedBooking.service.duration} minutes</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Price:</span>
+                    <span className="font-bold text-blue-600 text-lg">{selectedBooking.price.formatted}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Appointment Info */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Appointment</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date & Time:</span>
+                    <span className="font-medium text-gray-900">{selectedBooking.appointment.formatted}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <div>{getStatusBadge(selectedBooking.status)}</div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created:</span>
+                    <span className="font-medium text-gray-900">
+                      {new Date(selectedBooking.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
+              {selectedBooking.status !== 'cancelled' && (
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                >
+                  Cancel Booking
+                </button>
+              )}
+              <button
+                onClick={closeDetailModal}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
